@@ -6,11 +6,10 @@
 <br>ChoseUI ui = new ChoseUI( ConsoleColor.Gray);</br>
 
 <br>Than you can add menus, with Select options, which has a text and functionality:</br>
-<br>ui.AddUI(new MenuUI("Main Menu", new List<UIData>() {
-    new UIData("option1", () => { }),
-    new UIData("option2", () => { }),
-    new UIData("Exit", ui.StopUI) }));
-</br>
+<br>ui.AddUI(new MenuUI("Main Menu", new List<UIData>() {</br>
+<br>    new UIData("option1", () => { }),</br>
+<br>    new UIData("option2", () => { }),</br>
+<br>    new UIData("Exit", ui.StopUI) }));</br>
 <br>Than you just start it with:</br>
 <br>ui.StartUI();</br>
 
