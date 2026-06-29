@@ -21,6 +21,7 @@ namespace TunUI
         int clearRegionX,clearRegionY;
         int regionBottomX,regionBottomY;
         int width=0, height=0;
+        int maxLenght=0;
         Thread UIThread;
         public ChoseUI(List<MenuUI> uiElements, ConsoleColor selectedUIColor)
         {
@@ -47,10 +48,18 @@ namespace TunUI
         {
             menu.Add(menu.Count, ui);
         }
+        public void AddUI(MenuUI ui,int uiID)
+        {
+            menu.Add(uiID, ui);
+        }
+        public void AddUI<T>(MenuUI ui, T uiID) where T : IComparable, IFormattable, IConvertible
+        {
+            if (!typeof(T).IsEnum) throw new ArgumentException("UI ID must be an enum");
+            menu.Add((int)(object)uiID, ui);
+        }
         public void DrawSelectedUI()
         { 
             MenuUI currentMenu = menu[selectedMenu];
-            int maxLenght = currentMenu.menuList.Select(x => x.text.Length).Max();
             ClearRegion();
             Console.WriteLine($"{new string(' ',5)}{currentMenu.title.ToUpper()}{new string(' ', 5+maxLenght - currentMenu.title.Length)}");
             // Draw menu items
@@ -68,10 +77,15 @@ namespace TunUI
                     Console.BackgroundColor = backgroundColor;
                     Console.ForegroundColor = textColor;
                 }
-                
-                Console.WriteLine($"{new string(' ',5)}{menuItem.text.ToUpper()}{new string(' ', 5+maxLenght - menuItem.text.Length)}");
+                Console.SetCursorPosition(0, clearRegionY+1+i);
+
+                Console.Write($"{new string(' ',5)}{menuItem.text.ToUpper()}{new string(' ', 5+maxLenght - menuItem.text.Length)}");
+                Console.ResetColor();
             }
+            Console.WriteLine(  ); 
             Console.ResetColor();
+            (regionBottomX, regionBottomY) = Console.GetCursorPosition();
+              
             IsDirty =false;
             Console.CursorVisible = false;
             
@@ -96,18 +110,23 @@ namespace TunUI
         } 
         public void ChangeMenu(int newMenu)
         {
+            ClearRegion();
             selectedMenu = newMenu;
-            MenuUI currentMenu = menu[selectedMenu];
-            ClearRegion( );
-            int maxLenght = currentMenu.menuList.Select(x => x.text.Length).Max();
-            int width = $"{new string(' ', 5)}{currentMenu.title.ToUpper()}{new string(' ', 5 + maxLenght - currentMenu.title.Length)}".Length;
+            MenuUI currentMenu = menu[selectedMenu]; 
+            maxLenght = currentMenu.menuList.Select(x => x.text.Length).Max();
+            if(maxLenght<currentMenu.title.Length) maxLenght = currentMenu.title.Length;
+            int width = $"{new string(' ', 5)}{currentMenu.title.ToUpper()}{new string(' ', 5 + maxLenght)}".Length;
             this.width = width;
-            height = currentMenu.menuList.Count+2;
-            selectedUI = 0;
-
+            height = currentMenu.menuList.Count+1;
+            selectedUI = 0; 
             //Console.WriteLine();
-            (clearRegionX,clearRegionY)=Console.GetCursorPosition();
             IsDirty = true;
+
+        }
+        public void ChangeMenu<T>(T uiID) where T : IComparable, IFormattable, IConvertible
+        {
+            if (!typeof(T).IsEnum) throw new ArgumentException("UI ID must be an enum");
+            ChangeMenu((int)(object)uiID); 
 
         }
         //Only do +1 or -1
@@ -144,20 +163,19 @@ namespace TunUI
         void ClearRegion()
         {
             if (width==0) return;
-            
-            (regionBottomX,regionBottomY)=Console.GetCursorPosition();
+            (var x, var y)=Console.GetCursorPosition();
             string blank = new string(' ', width);
             for (int row = clearRegionY; row < clearRegionY + height; row++)
             {
                 Console.SetCursorPosition(clearRegionX, row);
-                Console.Write(blank); 
-            }
-            // Restore cursor to the top-left of the cleared region
-            (var x, var y)=Console.GetCursorPosition();
-            if(regionBottomY==y)
-            Console.SetCursorPosition(0, clearRegionY);
+                Console.Write(blank);  
+            } 
+
+            if (regionBottomY==y)
+            Console.SetCursorPosition(clearRegionX, clearRegionY);
             else
-            Console.SetCursorPosition(0, regionBottomY);
+            Console.SetCursorPosition(x, y);
+            (clearRegionX, clearRegionY) = Console.GetCursorPosition(); 
 
         }
     }
